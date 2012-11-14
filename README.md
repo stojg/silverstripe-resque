@@ -29,6 +29,8 @@ There are most likely a suitable packages in your prefered linux distribution (u
 ## Silverstripe Resque
 
 	$ git clone git@github.com:stojg/silverstripe-resque.git resque
+	$ cd resque
+	$ composer update
 
 # Usage
 
