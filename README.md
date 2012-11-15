@@ -79,7 +79,7 @@ In the worker terminal you should now see something similar to
 	
 # Credits
 
-Following is the giants where I've started f
+Here are the giants which shoulders I'm standing standing on:
 
 - [Chris Boulton](https://github.com/chrisboulton/php-resque) for PHP resque
 - [defunkt](https://github.com/defunkt/resque/) the original resque for ruby
