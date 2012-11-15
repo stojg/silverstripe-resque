@@ -4,6 +4,27 @@ This modules wraps php-resque to be able to make scheduled background jobs in sw
 
 _Still in development_
 
+The principle is that a 'front-end' adds a job via Resque class, this is a very fast operation.
+
+
+	$args = array(
+		'message' => 'from '.$_SERVER['HTTP_HOST'],
+		'time' => date('Y-m-d H:i:s')
+	);
+	$token = Resque::enqueue("dev:ping", "SSResquePingJob", $args);
+
+This will be sent over tcp to a redis server that will hold this information until a worker fetches it.
+
+By starting one or many worker via the cli, they will pull jobs from a 'queue' on redis, ie: `dev:ping`. 
+Then it will find a PHP class to run the job, `SSResquePingJob` populate it with the `$args` and then 
+run `SSResquePingJob->perform()`.
+
+	public function perform() {
+		echo 'Ping: '.$this->args['time'].' '.$this->args['message'].PHP_EOL;
+	}
+
+Any exception or errors will mark the job as failed, and it's possible to requeue it.
+
 # Installation
 
 ## Install redis
