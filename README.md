@@ -2,6 +2,12 @@
 
 This modules wraps php-resque to be able to make scheduled background jobs in sweet harmony with redis.
 
+# Requirements
+
+- SilverStripe with requirements
+- Redis server
+- (optional) a worker monitor, eg god or monit, to start and monitor the worker(s).
+
 _Still in development_
 
 The principle is that a 'front-end' adds a job via Resque class, this is a very fast operation.
