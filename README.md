@@ -76,7 +76,11 @@ In another terminal window, try creating a ping job
 In the worker terminal you should now see something similar to
 
 	Ping: 2012-11-15 10:51:29 from hostname
-	
+
+# Web interface
+
+	sudo gem install resque --no-ri -no-rdoc
+
 # Credits
 
 Here are the giants which shoulders I'm standing standing on:
