@@ -85,6 +85,59 @@ In the worker terminal you should now see something similar to
 
 How to install god on ubuntu / debian: [How to monitor Resque with God and do it all with Capistrano on Ubuntu](https://gist.github.com/1275333)
 
+Example configuration:
+
+  num_workers = 2
+
+  num_workers.times do |num|
+    God.watch do |w|
+      w.dir      = "/var/www/site"
+      w.name     = "site-worker-#{num}"
+      w.group    = 'site-worker'
+      w.interval = 30.seconds
+      w.uid = 'www-data'
+      w.gid = 'www-data'
+      w.start = "/usr/bin/php ./framework/cli-script.php dev/resque/run queue=ping"
+
+      # restart if memory gets too high
+      w.transition(:up, :restart) do |on|
+        on.condition(:memory_usage) do |c|
+          c.above = 64.megabytes
+          c.times = 2
+        end
+      end
+
+      # determine the state on startup
+      w.transition(:init, { true => :up, false => :start }) do |on|
+        on.condition(:process_running) do |c|
+          c.running = true
+        end
+      end
+
+      # determine when process has finished starting
+      w.transition([:start, :restart], :up) do |on|
+        on.condition(:process_running) do |c|
+          c.running = true
+          c.interval = 5.seconds
+        end
+
+        # failsafe
+        on.condition(:tries) do |c|
+          c.times = 5
+          c.transition = :start
+          c.interval = 5.seconds
+        end
+      end
+
+      # start if process is not running
+      w.transition(:up, :start) do |on|
+        on.condition(:process_running) do |c|
+          c.running = false
+        end
+      end
+    end
+  end
+
 # Credits
 
 Here are the giants which shoulders I'm standing standing on:
