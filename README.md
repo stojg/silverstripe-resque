@@ -81,6 +81,10 @@ In the worker terminal you should now see something similar to
 
 	sudo gem install resque --no-ri -no-rdoc
 
+# Process monitor
+
+How to install god on ubuntu / debian: [How to monitor Resque with God and do it all with Capistrano on Ubuntu](https://gist.github.com/1275333)
+
 # Credits
 
 Here are the giants which shoulders I'm standing standing on:
