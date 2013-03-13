@@ -1,15 +1,15 @@
 {
-"name": "stojg/silverstripe-resque",
-    "type": "module",
+	"name": "stojg/silverstripe-resque",
+	"type": "silverstripe-module",
     "description": "Wraps around the resque code for background jobss",
     "keywords": ["silverstripe","redis"],
-    "homepage": "http://github.com/silverstripe-resque",
+    "homepage": "http://github.com/stojg/silverstripe-resque",
     "license": "BSD",
     "authors": [
         {
             "name": "Stig Lindqvist",
             "email": "stojg.lindqvist@gmail.com",
-            "homepage": "https://www.stojg.se/"
+            "homepage": "https://stojg.se/"
         }
     ],
 	"require": {
