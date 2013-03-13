@@ -1,8 +1,16 @@
 <?php
 
-require_once BASE_PATH.'/resque/vendor/autoload.php';
+require_once BASE_PATH.'/vendor/autoload.php';
 
 class SSResqueRun extends Controller {
+
+	/**
+	 *
+	 * @var array
+	 */
+	public static $allowed_actions = array(
+		'index',
+	);
 
 	protected $queue = null;
 
@@ -12,7 +20,7 @@ class SSResqueRun extends Controller {
 
 	protected $logLevel = null;
 
-	protected $interval = 10;
+	protected $interval = 3;
 	
 	
 	/**
@@ -22,7 +30,11 @@ class SSResqueRun extends Controller {
 	 */
 	public function init() {
 		parent::init();
-		
+
+		if(!function_exists('pcntl_fork')) {
+			throw new Exception('This module need the pcntl php module');
+		}
+
 		if(php_sapi_name() !== 'cli') {
 			echo 'The resque runner must be run in a CLI environment.';
 			exit(1);
@@ -34,7 +46,6 @@ class SSResqueRun extends Controller {
 
 		$this->count = $this->request->getVar('count');
 
-		$logLevel = 0;
 		$logging = $this->request->getVar('logging');
 		$verbose = $this->request->getVar('verbose');
 		$vverbose = $this->request->getVar('vverbose');
@@ -51,7 +62,7 @@ class SSResqueRun extends Controller {
 	 * @param SS_HTTPRequest $request
 	 */
 	public function index(SS_HTTPRequest $request) {
-		if(!$request->getVar('queue')) {
+		if(!$this->request->getVar('queue')) {
 			die("Set 'queue' parameter to containing the list of queues to work on.\n");
 		}
 		$this->queue = $request->getVar('queue');
@@ -99,7 +110,7 @@ class SSResqueRun extends Controller {
 			}
 		}
 
-		fwrite(STDOUT, '*** Starting worker '.$worker." ".$this->interval.PHP_EOL);
+		fwrite(STDOUT, '[+] Starting worker '.$worker." ".$this->interval.PHP_EOL);
 		$worker->work($this->interval);
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-require_once BASE_PATH.'/resque/vendor/autoload.php';
+require_once BASE_PATH.'/vendor/autoload.php';
 
 class SSResquePing extends Controller {
 
@@ -9,7 +9,7 @@ class SSResquePing extends Controller {
 			'message' => 'from '.$_SERVER['HTTP_HOST'],
 			'time' => date('Y-m-d H:i:s')
 		);
-		$token = Resque::enqueue("dev:ping", "SSResquePingJob", $args);
+		$token = Resque::enqueue("dev:ping", "SSResquePingJob", $args, true);
 		return 'Ping job created with token ' . $token . PHP_EOL;
 	}	
 }
