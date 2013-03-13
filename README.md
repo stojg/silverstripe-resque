@@ -7,6 +7,7 @@ This modules wraps php-resque to be able to make scheduled background jobs in sw
 - SilverStripe with requirements
 - Redis server
 - (optional) a worker monitor, eg god or monit, to start and monitor the worker(s).
+- This module require that the PHP pcntl module is installed
 
 _Still in development_
 
