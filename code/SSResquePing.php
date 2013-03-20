@@ -1,7 +1,5 @@
 <?php
 
-require_once BASE_PATH.'/vendor/autoload.php';
-
 class SSResquePing extends Controller {
 
 	public function index() {
