@@ -13,6 +13,6 @@
         }
     ],
 	"require": {
-		"chrisboulton/php-resque": "dev-master@b0843f4dba7e914728539c4001b8325b68c44354"
+		"chrisboulton/php-resque": "dev-master#b0843f4dba7e914728539c4001b8325b68c44354"
 	}
 }
