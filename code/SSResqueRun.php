@@ -18,7 +18,11 @@ class SSResqueRun extends Controller {
 
 	protected $count = 1;
 
-	protected $logLevel = null;
+	/**
+	 *
+	 * @var Resque_Log 
+	 */
+	protected $logger = null;
 
 	protected $interval = 3;
 	
@@ -50,9 +54,9 @@ class SSResqueRun extends Controller {
 		$verbose = $this->request->getVar('verbose');
 		$vverbose = $this->request->getVar('vverbose');
 		if(!empty($logging) || !empty($verbose)) {
-			$this->logLevel = Resque_Worker::LOG_NORMAL;
+			$this->logger = new Resque_Log(true);
 		} else if(!empty($vverbose)) {
-			$this->logLevel = Resque_Worker::LOG_VERBOSE;
+			$this->logger = new Resque_Log(true);
 		}
 	}
 
