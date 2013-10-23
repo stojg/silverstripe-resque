@@ -105,7 +105,9 @@ class SSResqueRun extends Controller {
 	protected function startWorker($forked=false) {
 		$queues = explode(',', $this->queue);
 		$worker = new Resque_Worker($queues);
-		$worker->logLevel = $this->logLevel;
+		if($this->logger) {
+			$worker->setLogger($this->logger);
+		}
 		
 		if(!$forked) {
 			$PIDFILE = getenv('PIDFILE');
