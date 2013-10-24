@@ -12,10 +12,22 @@ class SSResqueRun extends Controller {
 		'index',
 	);
 
+	/**
+	 *
+	 * @var type 
+	 */
 	protected $queue = null;
 
+	/**
+	 *
+	 * @var type 
+	 */
 	protected $backend = null;
 
+	/**
+	 *
+	 * @var int
+	 */
 	protected $count = 1;
 
 	/**
@@ -24,6 +36,11 @@ class SSResqueRun extends Controller {
 	 */
 	protected $logger = null;
 
+	/**
+	 * How often to check for new items in seconds
+	 *
+	 * @var int
+	 */
 	protected $interval = 3;
 	
 	
@@ -54,8 +71,8 @@ class SSResqueRun extends Controller {
 		$verbose = $this->request->getVar('verbose');
 		$vverbose = $this->request->getVar('vverbose');
 		if(!empty($logging) || !empty($verbose)) {
-			$this->logger = new Resque_Log(true);
-		} else if(!empty($vverbose)) {
+			$this->logger = new Resque_Log(false);
+		} else {
 			$this->logger = new Resque_Log(true);
 		}
 	}
@@ -67,7 +84,8 @@ class SSResqueRun extends Controller {
 	 */
 	public function index(SS_HTTPRequest $request) {
 		if(!$this->request->getVar('queue')) {
-			die("Set 'queue' parameter to containing the list of queues to work on.\n");
+			echo("Set 'queue' parameter to containing the list of queues to work on.\n");
+			exit(1);
 		}
 		$this->queue = $request->getVar('queue');
 		
@@ -105,9 +123,7 @@ class SSResqueRun extends Controller {
 	protected function startWorker($forked=false) {
 		$queues = explode(',', $this->queue);
 		$worker = new Resque_Worker($queues);
-		if($this->logger) {
-			$worker->setLogger($this->logger);
-		}
+		$worker->setLogger($this->logger);
 		
 		if(!$forked) {
 			$PIDFILE = getenv('PIDFILE');
