@@ -1,7 +1,19 @@
 <?php
-
-require_once BASE_PATH.'/vendor/autoload.php';
-
+/**
+ * This controller starts a long lived process that will execute resque jobs
+ * 
+ * Typically you will start it by running this in a cli environment
+ * 
+ *     ./framework/sake dev/resque/run verbose=1 queue=* flush=1
+ * 
+ * list of GET params:
+ *  
+ *  verbose: 1 | 0 -  Should we log all messages to the log
+ *  queue: "queuename" - A comma separated list of queues to work on
+ *  backend: "localhost:6379" - the address and port number of the redis server
+ *  count: int - the number of child workers to spin up
+ * 
+ */
 class SSResqueRun extends Controller {
 
 	/**
@@ -13,22 +25,25 @@ class SSResqueRun extends Controller {
 	);
 
 	/**
+	 * Comma separated string with the queues that this runner will work on
 	 *
-	 * @var type 
+	 * @var string 
 	 */
 	protected $queue = null;
 
 	/**
 	 *
-	 * @var type 
+	 * @var mixed $backend Host/port combination separated by a colon, or
+	 *                     a nested array of servers with host/port pairs 
 	 */
 	protected $backend = null;
 
 	/**
+	 * How many child processes should be started
 	 *
 	 * @var int
 	 */
-	protected $count = 1;
+	protected $numWorkers = 1;
 
 	/**
 	 *
@@ -37,11 +52,11 @@ class SSResqueRun extends Controller {
 	protected $logger = null;
 
 	/**
-	 * How often to check for new items in seconds
+	 * How often to check for new jobs on the queue in seconds
 	 *
 	 * @var int
 	 */
-	protected $interval = 3;
+	protected $interval = 5;
 	
 	
 	/**
@@ -50,30 +65,37 @@ class SSResqueRun extends Controller {
 	 *
 	 */
 	public function init() {
+		// Ensure the composer autoloader is loaded so dependencies are loaded correctly
+		require_once BASE_PATH.'/vendor/autoload.php';
+		
 		parent::init();
-
-		if(!function_exists('pcntl_fork')) {
-			throw new Exception('This module need the pcntl php module');
+		
+		$numWorkers = $this->request->getVar('count');
+		if($numWorkers > 1 && !function_exists('pcntl_fork')) {
+			throw new Exception('This module need the pcntl PHP module');
+		} else if($numWorkers) {
+			$this->numWorkers = $numWorkers;
 		}
 
 		if(php_sapi_name() !== 'cli') {
-			echo 'The resque runner must be run in a CLI environment.';
+			echo 'The resque runner must be started in a CLI environment.';
 			exit(1);
 		}
+		
+		if(!$this->request->getVar('queue')) {
+			echo("Set 'queue' parameter to containing the list of queues to work on.\n");
+			exit(1);
+		}
+		$this->queue = $this->request->getVar('queue');
 
-		if(!$this->request->getVar('backend')) {
+		if($this->request->getVar('backend')) {
 			Resque::setBackend($this->request->getVar('backend'));
 		}
-
-		$this->count = $this->request->getVar('count');
-
-		$logging = $this->request->getVar('logging');
-		$verbose = $this->request->getVar('verbose');
-		$vverbose = $this->request->getVar('vverbose');
-		if(!empty($logging) || !empty($verbose)) {
-			$this->logger = new Resque_Log(false);
-		} else {
+		
+		if($this->request->getVar('verbose')) {
 			$this->logger = new Resque_Log(true);
+		} else {
+			$this->logger = new Resque_Log(false);
 		}
 	}
 
@@ -83,14 +105,9 @@ class SSResqueRun extends Controller {
 	 * @param SS_HTTPRequest $request
 	 */
 	public function index(SS_HTTPRequest $request) {
-		if(!$this->request->getVar('queue')) {
-			echo("Set 'queue' parameter to containing the list of queues to work on.\n");
-			exit(1);
-		}
-		$this->queue = $request->getVar('queue');
 		
-		if($this->count > 1) {
-			$this->fork($this->count);
+		if($this->numWorkers > 1) {
+			$this->fork($this->numWorkers);
 		} else {
 			$this->startWorker();	
 		}
@@ -105,10 +122,10 @@ class SSResqueRun extends Controller {
 		for($i = 0; $i < $workers; ++$i) {
 			$pid = pcntl_fork();
 			if($pid == -1) {
-				die("Could not fork worker ".$i."\n");
-			}
-			// Child, start the worker
-			else if(!$pid) {
+				echo "Could not fork worker ".$i.PHP_EOL;
+				exit(1);
+			// When $pid is 0 we are in the childs process
+			} else if(!$pid) {
 				$this->startWorker(true);
 				break;
 			}
@@ -118,14 +135,14 @@ class SSResqueRun extends Controller {
 	/**
 	 * Start a single worker
 	 *
-	 * @param bool $forked - is this worker forked
+	 * @param bool $isForked - is this worker forked
 	 */
-	protected function startWorker($forked=false) {
+	protected function startWorker($isForked=false) {
 		$queues = explode(',', $this->queue);
 		$worker = new Resque_Worker($queues);
 		$worker->setLogger($this->logger);
 		
-		if(!$forked) {
+		if(!$isForked) {
 			$PIDFILE = getenv('PIDFILE');
 			if($PIDFILE) {
 				file_put_contents($PIDFILE, getmypid()) or die('Could not write PID information to ' . $PIDFILE);
