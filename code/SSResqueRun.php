@@ -12,6 +12,7 @@
  *  queue: "queuename" - A comma separated list of queues to work on
  *  backend: "localhost:6379" - the address and port number of the redis server
  *  count: int - the number of child workers to spin up
+ *  log: bool - use the silverstripe logger instead of STDOUT
  * 
  */
 class SSResqueRun extends Controller {
@@ -47,7 +48,7 @@ class SSResqueRun extends Controller {
 
 	/**
 	 *
-	 * @var Resque_Log 
+	 * @var Psr\Log\AbstractLogger 
 	 */
 	protected $logger = null;
 
@@ -92,7 +93,13 @@ class SSResqueRun extends Controller {
 			Resque::setBackend($this->request->getVar('backend'));
 		}
 		
-		if($this->request->getVar('verbose')) {
+		if($this->request->getVar('log')) {
+			if($this->request->getVar('verbose')) {
+				$this->logger = new SSResqueLogger(true);
+			} else {
+				$this->logger = new SSResqueLogger(false);
+			}
+		} else if($this->request->getVar('verbose')) {
 			$this->logger = new Resque_Log(true);
 		} else {
 			$this->logger = new Resque_Log(false);
