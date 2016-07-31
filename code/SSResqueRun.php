@@ -57,7 +57,7 @@ class SSResqueRun extends Controller {
 	 *
 	 * @var int
 	 */
-	protected $interval = 5;
+	protected $interval = 1;
 	
 	
 	/**
@@ -156,7 +156,7 @@ class SSResqueRun extends Controller {
 			}
 		}
 
-		fwrite(STDOUT, '[+] Starting worker '.$worker." ".$this->interval.PHP_EOL);
+		fwrite(STDOUT, '[+] Starting worker '.$worker.", polling every ".$this->interval." second(s)".PHP_EOL);
 		$worker->work($this->interval);
 	}
 }
