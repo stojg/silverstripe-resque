@@ -4,28 +4,7 @@
  * SSResqueLogger
  *
  */
-class SSResqueLogger extends Psr\Log\AbstractLogger {
-
-	/**
-	 *
-	 * @var boolean
-	 */
-	public $verbose;
-	
-	/**
-	 *
-	 * @var string
-	 */
-	protected $path;
-
-	/**
-	 * 
-	 * @param true $verbose
-	 */
-	public function __construct($verbose = false) {
-		$this->verbose = $verbose;
-		$this->path = DEPLOYNAUT_LOG_PATH.'/resque-log.log';
-	}
+class SSResqueLogger extends Resque_Log {
 
 	/**
 	 * Logs with an arbitrary level.
@@ -36,42 +15,20 @@ class SSResqueLogger extends Psr\Log\AbstractLogger {
 	 * @return null
 	 */
 	public function log($level, $message, array $context = array()) {
-		$fh = fopen($this->path, 'a');
-		if($this->verbose) {
-			fwrite($fh, '[' . $level . '] [' . strftime('%T %Y-%m-%d') . '] ' . $this->interpolate($message, $context) . PHP_EOL);
-			return;
-		}
+		parent::log($level, $message, $context);
 
-		if(!($level === Psr\Log\LogLevel::INFO || $level === Psr\Log\LogLevel::DEBUG)) {
-			fwrite($fh, '[' . $level . '] ' . $this->interpolate($message, $context) . PHP_EOL);
+		// if we have a stack context which is the Exception that was thrown,
+		// send that to SS_Log so writers can use that for reporting the error.
+		if (!empty($context['stack'])) {
+			SS_Log::log($context['stack'], $this->convertLevel($level));
 		}
-		fclose($fh);
 	}
 
 	/**
-	 * Fill placeholders with the provided context
-	 * @author Jordi Boggiano j.boggiano@seld.be
-	 * 
-	 * @param  string  $message  Message to be logged
-	 * @param  array   $context  Array of variables to use in message
-	 * @return string
-	 */
-	public function interpolate($message, array $context = array()) {
-		// build a replacement array with braces around the context keys
-		$replace = array();
-		foreach($context as $key => $val) {
-			$replace['{' . $key . '}'] = $val;
-		}
-
-		// interpolate replacement values into the message and return
-		return strtr($message, $replace);
-	}
-	
-	/**
-	 * 
+	 *
 	 * @param string $resqueError
 	 */
-	protected function convertErrorLevel($resqueError) {
+	protected function convertLevel($resqueError) {
 		switch($resqueError) {
 			case 'emergency':
 			case 'alert':
