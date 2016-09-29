@@ -1,19 +1,17 @@
 <?php
 /**
  * This controller starts a long lived process that will execute resque jobs
- * 
+ *
  * Typically you will start it by running this in a cli environment
- * 
+ *
  *     ./framework/sake dev/resque/run verbose=1 queue=* flush=1
- * 
+ *
  * list of GET params:
- *  
+ *
  *  verbose: 1 | 0 -  Should we log all messages to the log
  *  queue: "queuename" - A comma separated list of queues to work on
  *  backend: "localhost:6379" - the address and port number of the redis server
  *  count: int - the number of child workers to spin up
- *  log: bool - use the silverstripe logger instead of STDOUT
- * 
  */
 class SSResqueRun extends Controller {
 
@@ -28,14 +26,14 @@ class SSResqueRun extends Controller {
 	/**
 	 * Comma separated string with the queues that this runner will work on
 	 *
-	 * @var string 
+	 * @var string
 	 */
 	protected $queue = null;
 
 	/**
 	 *
 	 * @var mixed $backend Host/port combination separated by a colon, or
-	 *                     a nested array of servers with host/port pairs 
+	 *                     a nested array of servers with host/port pairs
 	 */
 	protected $backend = null;
 
@@ -48,7 +46,7 @@ class SSResqueRun extends Controller {
 
 	/**
 	 *
-	 * @var Psr\Log\AbstractLogger 
+	 * @var Psr\Log\AbstractLogger
 	 */
 	protected $logger = null;
 
@@ -58,8 +56,8 @@ class SSResqueRun extends Controller {
 	 * @var int
 	 */
 	protected $interval = 1;
-	
-	
+
+
 	/**
 	 * Check that all needed and option params have been set
 	 *
@@ -68,9 +66,9 @@ class SSResqueRun extends Controller {
 	public function init() {
 		// Ensure the composer autoloader is loaded so dependencies are loaded correctly
 		require_once BASE_PATH.'/vendor/autoload.php';
-		
+
 		parent::init();
-		
+
 		$numWorkers = $this->request->getVar('count');
 		if($numWorkers > 1 && !function_exists('pcntl_fork')) {
 			throw new Exception('This module need the pcntl PHP module');
@@ -82,7 +80,7 @@ class SSResqueRun extends Controller {
 			echo 'The resque runner must be started in a CLI environment.';
 			exit(1);
 		}
-		
+
 		if(!$this->request->getVar('queue')) {
 			echo("Set 'queue' parameter to containing the list of queues to work on.\n");
 			exit(1);
@@ -92,18 +90,8 @@ class SSResqueRun extends Controller {
 		if($this->request->getVar('backend')) {
 			Resque::setBackend($this->request->getVar('backend'));
 		}
-		
-		if($this->request->getVar('log')) {
-			if($this->request->getVar('verbose')) {
-				$this->logger = new SSResqueLogger(true);
-			} else {
-				$this->logger = new SSResqueLogger(false);
-			}
-		} else if($this->request->getVar('verbose')) {
-			$this->logger = new Resque_Log(true);
-		} else {
-			$this->logger = new Resque_Log(false);
-		}
+
+		$this->logger = new SSResqueLogger((bool) $this->request->getVar('verbose'));
 	}
 
 	/**
@@ -112,11 +100,11 @@ class SSResqueRun extends Controller {
 	 * @param SS_HTTPRequest $request
 	 */
 	public function index(SS_HTTPRequest $request) {
-		
+
 		if($this->numWorkers > 1) {
 			$this->fork($this->numWorkers);
 		} else {
-			$this->startWorker();	
+			$this->startWorker();
 		}
 	}
 
@@ -148,7 +136,7 @@ class SSResqueRun extends Controller {
 		$queues = explode(',', $this->queue);
 		$worker = new Resque_Worker($queues);
 		$worker->setLogger($this->logger);
-		
+
 		if(!$isForked) {
 			$PIDFILE = getenv('PIDFILE');
 			if($PIDFILE) {
