@@ -1,6 +1,6 @@
 {
-	"name": "stojg/silverstripe-resque",
-	"type": "silverstripe-module",
+    "name": "stojg/silverstripe-resque",
+    "type": "silverstripe-module",
     "description": "Wraps around the resque code for background jobs",
     "keywords": ["silverstripe","redis"],
     "homepage": "http://github.com/stojg/silverstripe-resque",
@@ -12,7 +12,7 @@
             "homepage": "https://stojg.se/"
         }
     ],
-	"require": {
-		"chrisboulton/php-resque": "dev-master#b0843f4dba7e914728539c4001b8325b68c44354"
-	}
+    "require": {
+        "resque/php-resque": "~1.3"
+    }
 }
